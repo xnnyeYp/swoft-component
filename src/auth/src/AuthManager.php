@@ -106,8 +106,10 @@ class AuthManager implements AuthManagerInterface
         $this->setSession($session);
         if ($this->cacheEnable === true) {
             try {
+                $cacheKey = $this->getCacheKey($session->getIdentity(), $session->getExtendedData());
                 $this->getCacheClient()
-                    ->set($this->getCacheKey($session->getIdentity(), $session->getExtendedData()), $session->getToken(), $session->getExpirationTime());
+                    ->set($cacheKey, $session->getToken());
+                $this->getCacheClient()->call("EXPIREAT", [$cacheKey, $session->getExpirationTime()]);
             } catch (InvalidArgumentException $e) {
                 $err = sprintf('%s Invalid Argument : %s', $session->getIdentity(), $e->getMessage());
                 throw new AuthException(ErrorCode::POST_DATA_NOT_PROVIDED, $err);
